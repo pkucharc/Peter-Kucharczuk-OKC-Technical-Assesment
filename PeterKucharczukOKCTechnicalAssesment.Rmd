@@ -1,0 +1,135 @@
+---
+title: "OKC Thunder Technical Assesment"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+read.csv("shots_data.csv") -> shotData
+```
+
+```{r}
+#Splits team A and B
+shotData %>% filter(team == "Team A") -> teamA
+shotData %>% filter(team == "Team B") -> teamB
+```
+
+```{r}
+#Team A
+#creates columns to make coordinates positive, this makes it easier to do the inequalities
+teamA %>% mutate(xval = abs(x), yval = abs(y)) -> teamA
+
+#creates a length from (0,0) which I used for the above the corner threes
+teamA %>% mutate(pythag = (((xval^2) + (yval^2))^.5)) -> teamA
+
+#finds the number of corner 3point makes and misses
+teamA %>% filter(xval >= 22 & yval <= 7.8 & fgmade == 1) ->AC3makes
+as.integer(nrow(AC3makes)) -> AcountC3makes
+teamA %>% filter(xval >= 22 & yval <= 7.8 & fgmade == 0) ->AC3miss
+as.integer(nrow(AC3miss)) -> AcountC3miss
+
+#finds the number of non-corner 3point makes and misses
+teamA %>% filter(pythag >= 23.75 & yval >= 7.8 & fgmade == 1) ->ANC3makes
+as.integer(nrow(ANC3makes)) -> AcountNC3makes
+teamA %>% filter(pythag >= 23.75 & yval >= 7.8 & fgmade == 0) ->ANC3miss
+as.integer(nrow(ANC3miss)) -> AcountNC3miss
+
+#finds the number of two point makes and misses below the corner
+teamA %>% filter(xval <= 22 & yval <= 7.8 & fgmade == 1) ->A2PTmakes
+as.integer(nrow(A2PTmakes)) -> Acount2PTmakes
+teamA %>% filter(xval <= 22 & yval <= 7.8 & fgmade == 0) ->A2PTmiss
+as.integer(nrow(A2PTmiss)) -> Acount2PTmiss
+
+#finds the number of two point makes and misses above the corner
+teamA %>% filter(pythag <= 23.75 & yval >= 7.8 & fgmade == 1) ->A.2PTmakes
+as.integer(nrow(A.2PTmakes)) -> Acount.2PTmakes
+teamA %>% filter(pythag <= 23.75 & yval >= 7.8 & fgmade == 0) ->A.2PTmiss
+as.integer(nrow(A.2PTmiss)) -> Acount.2PTmiss
+A2PTtotalmake <- Acount.2PTmakes + Acount2PTmakes
+A2PTtotalmiss <- Acount.2PTmiss + Acount2PTmiss
+
+AtotalShots <- A2PTtotalmake + A2PTtotalmiss + AcountC3makes + AcountC3miss + AcountNC3makes + AcountNC3miss
+as.integer(AtotalShots) -> AtotalShots
+
+#finds the percent of shots that were two pointers
+APercent2PT <- (A2PTtotalmake + A2PTtotalmiss)/(AtotalShots)
+
+#finds the percent of shots that were three pointers below the break
+APercentC3 <- (AcountC3makes + AcountC3miss)/(AtotalShots)
+
+#finds the percent of shots that were three pointers that were not in the corner
+APercentNC3 <- (AcountNC3makes + AcountNC3miss)/(AtotalShots)
+
+#finds EFG% in 2PT range
+AeFG2PT <- A2PTtotalmake/(A2PTtotalmiss + A2PTtotalmake)
+
+#finds eFG% in corner 3
+AeFGC3 <- (AcountC3makes + (0.5*AcountC3makes))/(AcountC3miss + AcountC3makes)
+
+#finds efg% in non corner 3
+AeFGNC3 <- (AcountNC3makes + (0.5*AcountNC3makes))/(AcountNC3miss + AcountNC3makes)
+
+```
+
+```{r}
+#Team B
+#creates columns to make coordinates positive, this makes it easier to do the inequalities
+teamB %>% mutate(xval = abs(x), yval = abs(y)) -> teamB
+
+#creates a length from (0,0) which I used for the above the corner threes
+teamB %>% mutate(pythag = (((xval^2) + (yval^2))^.5)) -> teamB
+
+#finds the number of corner 3point makes and misses
+teamB %>% filter(xval >= 22 & yval <= 7.8 & fgmade == 1) ->BC3makes
+as.integer(nrow(BC3makes)) -> BcountC3makes
+teamB %>% filter(xval >= 22 & yval <= 7.8 & fgmade == 0) ->BC3miss
+as.integer(nrow(BC3miss)) -> BcountC3miss
+
+#finds the number of non-corner 3point makes and misses
+teamB %>% filter(pythag >= 23.75 & yval >= 7.8 & fgmade == 1) ->BNC3makes
+as.integer(nrow(BNC3makes)) -> BcountNC3makes
+teamB %>% filter(pythag >= 23.75 & yval >= 7.8 & fgmade == 0) ->BNC3miss
+as.integer(nrow(BNC3miss)) -> BcountNC3miss
+
+#finds the number of two point makes and misses below the corner
+teamB %>% filter(xval <= 22 & yval <= 7.8 & fgmade == 1) ->B2PTmakes
+as.integer(nrow(B2PTmakes)) -> Bcount2PTmakes
+teamB %>% filter(xval <= 22 & yval <= 7.8 & fgmade == 0) ->B2PTmiss
+as.integer(nrow(B2PTmiss)) -> Bcount2PTmiss
+
+#finds the number of two point makes and misses above the corner
+teamB %>% filter(pythag <= 23.75 & yval >= 7.8 & fgmade == 1) ->B.2PTmakes
+as.integer(nrow(B.2PTmakes)) -> Bcount.2PTmakes
+teamB %>% filter(pythag <= 23.75 & yval >= 7.8 & fgmade == 0) ->B.2PTmiss
+as.integer(nrow(B.2PTmiss)) -> Bcount.2PTmiss
+B2PTtotalmake <- Bcount.2PTmakes + Bcount2PTmakes
+B2PTtotalmiss <- Bcount.2PTmiss + Bcount2PTmiss
+
+BtotalShots <- B2PTtotalmake + B2PTtotalmiss + BcountC3makes + BcountC3miss + BcountNC3makes + BcountNC3miss
+as.integer(BtotalShots) -> BtotalShots
+
+#finds the percent of shots that were two pointers
+BPercent2PT <- (B2PTtotalmake + B2PTtotalmiss)/(BtotalShots)
+
+#finds the percent of shots that were three pointers below the break
+BPercentC3 <- (BcountC3makes + BcountC3miss)/(BtotalShots)
+
+#finds the percent of shots that were three pointers that were not in the corner
+BPercentNC3 <- (BcountNC3makes + BcountNC3miss)/(BtotalShots)
+
+#finds EFG% in 2PT range
+BeFG2PT <- B2PTtotalmake/(B2PTtotalmiss + B2PTtotalmake)
+
+#finds eFG% in corner 3
+BeFGC3 <- (BcountC3makes + (0.5*BcountC3makes))/(BcountC3miss + BcountC3makes)
+
+#finds efg% in non corner 3
+BeFGNC3 <- (BcountNC3makes + (0.5*BcountNC3makes))/(BcountNC3miss + BcountNC3makes)
+
+```
+
